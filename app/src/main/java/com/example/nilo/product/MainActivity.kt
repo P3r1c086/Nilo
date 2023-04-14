@@ -1,8 +1,11 @@
 package com.example.nilo.product
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -19,14 +22,22 @@ import com.example.nilo.databinding.ActivityMainBinding
 import com.example.nilo.detail.DetailFragment
 import com.example.nilo.entities.Product
 import com.example.nilo.order.OrderActivity
+import com.example.nilo.profile.ProfileFragment
+import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 
@@ -38,6 +49,8 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
     private lateinit var authStateListener: FirebaseAuth.AuthStateListener
 
     private lateinit var adapter: ProductAdapter
+
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     //variable para listar en tiempo real
     private lateinit var firestoreListener: ListenerRegistration
@@ -114,6 +127,7 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
         configAuth()
         configRecyclerView()
         configButtons()
+        configAnalytics()
 
         //FCM
 //        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
@@ -134,7 +148,8 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
             //si el usuario que entra esta autenticado
             if (auth.currentUser != null){
                 //ponemos el nombre del usuario en la barra de accion
-                supportActionBar?.title = auth.currentUser?.displayName
+//                supportActionBar?.title = auth.currentUser?.displayName
+                updateTitle(auth.currentUser!!)
                 //por default el contenido estara oculto y si el usuario se autentica correctamente
                 //podra ver el contenido de la app, en este caso tvInit, pero se puede cambiar por un
                 // contenedor , un formulario, etc, es decir el padre que contenga el contenido.
@@ -144,16 +159,57 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
                 //crear variable con todos los proveedores de autenticado
                 val providers = arrayListOf(
                     AuthUI.IdpConfig.EmailBuilder().build(),
-                    AuthUI.IdpConfig.GoogleBuilder().build())
+                    AuthUI.IdpConfig.GoogleBuilder().build(),
+                    AuthUI.IdpConfig.FacebookBuilder().build(),
+                    AuthUI.IdpConfig.PhoneBuilder().build())
+                //Se vinculan los botones con su vista
+                val loginView = AuthMethodPickerLayout
+                    .Builder(R.layout.view_login)
+                    .setEmailButtonId(R.id.btnEmail)
+                    .setGoogleButtonId(R.id.btnGoogle)
+                    .setFacebookButtonId(R.id.btnFacebook)
+                    .setPhoneButtonId(R.id.btnPhone)
+                    .setTosAndPrivacyPolicyId(R.id.tvPolicy)
+                    .build()
 
+                //Se configura la instancia de AuthUI
                 resultLauncher.launch(
                     AuthUI.getInstance()
                     .createSignInIntentBuilder()
                     .setAvailableProviders(providers)
                     .setIsSmartLockEnabled(false)//para que no aparezca el dialog con las opciones de los usuarios que ya han logueado antes
+                        .setTosAndPrivacyPolicyUrls("https://www.marca.com/", "https://www.marca.com/")//se configura la politica de privacidad
+                        .setAuthMethodPickerLayout(loginView)
+                        .setTheme(R.style.LoginTheme)
                     .build())
             }
         }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val info = getPackageManager().getPackageInfo(
+                    "com.example.nilo",
+                    PackageManager.GET_SIGNING_CERTIFICATES)
+                for (signature in info.signingInfo.apkContentsSigners) {
+                    val md = MessageDigest.getInstance("SHA");
+                    md.update(signature.toByteArray());
+                    Log.d("API >= 28 KeyHash:",
+                        Base64.encodeToString(md.digest(), Base64.DEFAULT));
+                }
+            } else {
+                val info = getPackageManager().getPackageInfo(
+                    "com.example.nilo",
+                    PackageManager.GET_SIGNATURES);
+                for (signature in info.signatures) {
+                    val md = MessageDigest.getInstance("SHA");
+                    md.update(signature.toByteArray());
+                    Log.d("API < 28 KeyHash:",
+                        Base64.encodeToString(md.digest(), Base64.DEFAULT));
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     //VINCULAR LAS DOS VARIABLES GLOBALES EN LOS METODOS DEL CICLO DE VIDA onResume() Y onPause()
@@ -193,6 +249,10 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 
     }
 
+    private fun configAnalytics(){
+        firebaseAnalytics = Firebase.analytics
+    }
+
     //inflar el munu
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
@@ -218,6 +278,18 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
                     }
             }
             R.id.action_order_history -> startActivity(Intent(this, OrderActivity::class.java))
+
+            R.id.action_profile -> {
+                val fragment = ProfileFragment()
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.containerMain, fragment)
+                    .addToBackStack(null)
+                    .commit()//aplicar los cambios con commit
+
+
+                showButton(false)//oculto el boton de ver carrito
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -271,6 +343,11 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
             .addToBackStack(null)
             .commit()
         showButton(false)
+        //Analytics
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_ITEM){
+            param(FirebaseAnalytics.Param.ITEM_ID, product.id!!)
+            param(FirebaseAnalytics.Param.ITEM_NAME, product.name!!)
+        }
     }
 
     override fun getProductsCart(): MutableList<Product> = productCartList
@@ -307,5 +384,9 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 
     override fun clearCart() {
         productCartList.clear()
+    }
+
+    override fun updateTitle(user: FirebaseUser) {
+        supportActionBar?.title = user.displayName
     }
 }

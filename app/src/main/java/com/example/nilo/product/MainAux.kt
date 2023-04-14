@@ -1,6 +1,7 @@
 package com.example.nilo.product
 
 import com.example.nilo.entities.Product
+import com.google.firebase.auth.FirebaseUser
 
 /**
  * Proyect: Nilo
@@ -17,4 +18,6 @@ interface MainAux {
     fun getProductSelected(): Product?
     fun showButton(isVisible: Boolean)
     fun addProductToCart(product: Product)
+
+    fun updateTitle(user: FirebaseUser)
 }
