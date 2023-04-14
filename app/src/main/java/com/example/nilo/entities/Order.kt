@@ -1,6 +1,8 @@
 package com.example.nilo.entities
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.ServerTimestamp
 
 /**
  * Proyect: Nilo
@@ -13,7 +15,10 @@ data class Order(@get:Exclude var id: String = "",
                  var clientId: String = "",
                  var products: Map<String, ProductOrder> = hashMapOf(),
                  var totalPrice: Double = 0.0,
-                 var status: Int = 0){
+                 var status: Int = 0,
+                 @ServerTimestamp var date: Timestamp? = null){
+    //con la anotacion @ServerTimestamp automaticamente al insertar una nueva orden el servidor de
+    // Firebase va a detectar esta anotacion y le va a insertar la fecha actual del servidor
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -20,6 +20,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 
 /**
@@ -83,7 +84,8 @@ class CartFragment : BottomSheetDialogFragment(), OnCartListener {
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
             }
             it.efab.setOnClickListener {
-                requestOrder()
+//                requestOrder()
+                requestOrderTransction()
             }
         }
     }
@@ -94,6 +96,9 @@ class CartFragment : BottomSheetDialogFragment(), OnCartListener {
         }
     }
 
+    /**
+     * Hacemos el proceso para generar la compra
+     */
     private fun requestOrder(){
         //Obtenemos el id del usuario cliente de Firebase
         val user = FirebaseAuth.getInstance().currentUser
@@ -110,6 +115,62 @@ class CartFragment : BottomSheetDialogFragment(), OnCartListener {
             val db = FirebaseFirestore.getInstance()
             db.collection(Constants.COLL_REQUESTS)
                 .add(order)
+                .addOnSuccessListener {
+                    dismiss()//quitar el fragmento
+                    (activity as? MainAux)?.clearCart()
+                    startActivity(Intent(context, OrderActivity::class.java))
+
+                    Toast.makeText(activity, "Compra realizada.", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(activity, "Error al comprar.", Toast.LENGTH_SHORT).show()
+                }
+                .addOnCompleteListener {
+                    enableUI(true)
+                }
+        }
+    }
+    /**
+     * Hacemos el proceso para generar la compra y que se descuente el numero de articulos en Shop Parner
+     */
+    private fun requestOrderTransction(){
+        //Obtenemos el id del usuario cliente de Firebase
+        val user = FirebaseAuth.getInstance().currentUser
+
+        user?.let { myUser ->
+            enableUI(false)
+
+            val products = hashMapOf<String, ProductOrder>()
+            adapter.getProducts().forEach{ product ->
+                products.put(product.id!!, ProductOrder(product.id!!, product.name!!, product.newQuantity, product.partnerId))
+            }
+            val order = Order(clientId = myUser.uid, products = products, totalPrice = totalPrice, status = 1)
+
+            val db = FirebaseFirestore.getInstance()
+
+            //reservamos el espacio del documento que vamos a sobreescribir
+            val requestDoc = db.collection(Constants.COLL_REQUESTS).document()
+            //hacemos referencia a la coleccion donde se encuentran los productos
+            val productRef = db.collection(Constants.COLL_PRODUCTS)
+            //para ejecutar la transaccion por lotes
+            db.runBatch { batch ->
+                //ponemos todas las transacciones que queremos ejecutar de forma continua, para que
+                // pueda ser tratada como una sola transaccion
+
+                //primero insertamos la orden
+                batch.set(requestDoc, order)
+                //ahora queremos que se vayan descontando las cantidades del inventario de ShorParner
+                //con esta funcion se hara una lectura de la cantidad actual del campo quantity,
+                // despues hara la resta correspondiente y aplicara los cambios. En caso de fallar
+                // porque otro usuario este queriendo comprar el mismo producto, este se va a
+                // reintentar automaticamente, lo que garantiza que no sean corruptos los datos.
+                order.products.forEach {
+                    //debido a que podrian existir dos o mas usuarios queriendo comprar el mismo producto,
+                    // vamos a usar una transaccion nativa de Firebase con la clase FieldValue.increment()
+                    batch.update(productRef.document(it.key), Constants.PROP_QUANTITY,
+                        FieldValue.increment(-it.value.quantity.toLong()))
+                }
+            }
                 .addOnSuccessListener {
                     dismiss()//quitar el fragmento
                     (activity as? MainAux)?.clearCart()

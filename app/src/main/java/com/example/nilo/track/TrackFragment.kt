@@ -13,7 +13,11 @@ import com.example.nilo.R
 import com.example.nilo.databinding.FragmentTrackBinding
 import com.example.nilo.entities.Order
 import com.example.nilo.order.OrderAux
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 
 /**
  * Proyect: Nilo
@@ -26,6 +30,7 @@ class TrackFragment : Fragment() {
     private var binding: FragmentTrackBinding? = null
 
     private var order: Order? = null
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
@@ -51,6 +56,7 @@ class TrackFragment : Fragment() {
             getOrderInRealtime(it.id)
 
             setupActionBar()
+            configAnalytics()
         }
     }
 
@@ -92,6 +98,13 @@ class TrackFragment : Fragment() {
             it.supportActionBar?.setDisplayHomeAsUpEnabled(true)
             it.supportActionBar?.title = getString(R.string.track_title)
             setHasOptionsMenu(true)
+        }
+    }
+
+    private fun configAnalytics(){
+        firebaseAnalytics = Firebase.analytics
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW){
+            param(FirebaseAnalytics.Param.METHOD, "check_track")
         }
     }
 
