@@ -35,6 +35,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import java.security.MessageDigest
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 
     //variable para listar en tiempo real
     private lateinit var firestoreListener: ListenerRegistration
+    private var queryPagination: Query? = null
 
     private var productSelected: Product? = null
     private val productCartList = mutableListOf<Product>()
@@ -230,8 +232,9 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
     }
 
     private fun configRecyclerView(){
-        //inicializar el adaptador
-        adapter = ProductAdapter(mutableListOf(), this)
+        //inicializar el adaptador. Agregamos un producto null en la lista para que se cumpla en el
+        // productAdapter que hay un producto nulo y muestre como ultimo elemento el boton "mas"
+        adapter = ProductAdapter(mutableListOf(Product()), this)
         binding.recyclerView.apply {
             // 2 es el num de columnas, HORIZONTAL es la orientacion
             layoutManager = GridLayoutManager(this@MainActivity, 2,
@@ -294,6 +297,9 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
         return super.onOptionsItemSelected(item)
     }
 
+    /**
+     * Metodo para cargar todos los productos disponibles
+     */
     private fun configFirestoreRealtime(){
         //instanciamos la bd
         val db = FirebaseFirestore.getInstance()
@@ -301,25 +307,39 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
         val productRef = db.collection(Constants.COLL_PRODUCTS)
 
         //para capturar los cambios
-        firestoreListener = productRef.addSnapshotListener { snapshots, error ->
-            if (error != null){
-                Toast.makeText(this, "Error al consultar datos.", Toast.LENGTH_SHORT).show()
-                return@addSnapshotListener
-            }
-            //en caso de que no exista error
-            for (snapshot in snapshots!!.documentChanges){
-
-                //extraer cada documento y convertirlo a producto
-                val product = snapshot.document.toObject(Product::class.java)
-                //asignamos como id el id aleatorio que crea la bd
-                product.id = snapshot.document.id
-                //sentencia when para detectar el tipo de evento
-                when(snapshot.type){
-                    DocumentChange.Type.ADDED -> adapter.add(product)
-                    DocumentChange.Type.MODIFIED -> adapter.update(product)
-                    DocumentChange.Type.REMOVED -> adapter.delete(product)
+        firestoreListener = productRef
+            //limitamos los resultados
+            .limit(4)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null){
+                    Toast.makeText(this, "Error al consultar datos.", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
                 }
-            }
+                //comenzamos a captar la ultima instancia de este arreglo y en base a eso decirle que
+                // el siguiente lote de 4 elementos sea a partir del ultimo del lote anterior
+
+                //como snapshots podria ser nulo, lo validamos antes
+                snapshots?.let { items ->
+                    val lastItem = items.documents[items.size() - 1]
+                    //una vez obtenido el ultimo elemento del snapshot, configuramos la query
+                    queryPagination = productRef
+                        .startAfter(lastItem)
+                        .limit(4)
+                    //en caso de que no exista error
+                    for (snapshot in snapshots!!.documentChanges){
+
+                        //extraer cada documento y convertirlo a producto
+                        val product = snapshot.document.toObject(Product::class.java)
+                        //asignamos como id el id aleatorio que crea la bd
+                        product.id = snapshot.document.id
+                        //sentencia when para detectar el tipo de evento
+                        when(snapshot.type){
+                            DocumentChange.Type.ADDED -> adapter.add(product)
+                            DocumentChange.Type.MODIFIED -> adapter.update(product)
+                            DocumentChange.Type.REMOVED -> adapter.delete(product)
+                        }
+                    }
+                }
         }
     }
 
@@ -388,5 +408,47 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 
     override fun updateTitle(user: FirebaseUser) {
         supportActionBar?.title = user.displayName
+    }
+
+    override fun loadMore() {
+        //instanciamos la bd
+        val db = FirebaseFirestore.getInstance()
+        //creamos una referencia a la coleccion donde estan los productos
+        val productRef = db.collection(Constants.COLL_PRODUCTS)
+
+        //ejecutamos en base a queryPagination
+        queryPagination?.let {
+            it.addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Toast.makeText(this, "Error al consultar datos.", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
+                }
+                //comenzamos a captar la ultima instancia de este arreglo y en base a eso decirle que
+                // el siguiente lote de 4 elementos sea a partir del ultimo del lote anterior
+
+                //como snapshots podria ser nulo, lo validamos antes
+                snapshots?.let { items ->
+                    val lastItem = items.documents[items.size() - 1]
+                    //una vez obtenido el ultimo elemento del snapshot, configuramos la query
+                    queryPagination = productRef
+                        .startAfter(lastItem)
+                        .limit(4)
+                        //en caso de que no exista error
+                    for (snapshot in snapshots!!.documentChanges) {
+
+                        //extraer cada documento y convertirlo a producto
+                        val product = snapshot.document.toObject(Product::class.java)
+                        //asignamos como id el id aleatorio que crea la bd
+                        product.id = snapshot.document.id
+                        //sentencia when para detectar el tipo de evento
+                        when (snapshot.type) {
+                            DocumentChange.Type.ADDED -> adapter.add(product)
+                            DocumentChange.Type.MODIFIED -> adapter.update(product)
+                            DocumentChange.Type.REMOVED -> adapter.delete(product)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
