@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/white"
-        android:focusable="true"
-        android:clickable="true"
-        android:padding="@dimen/common_padding_default">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/white"
+    android:focusable="true"
+    android:clickable="true"
+    android:padding="@dimen/common_padding_default">
 
         <ImageButton
             android:id="@+id/ibProfile"
@@ -18,6 +18,26 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:visibility="invisible"
+            tools:progress="75"
+            app:layout_constraintStart_toStartOf="@id/ibProfile"
+            app:layout_constraintEnd_toEndOf="@id/ibProfile"
+            app:layout_constraintTop_toBottomOf="@id/ibProfile"/>
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvProgress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/common_padding_min"
+            tools:text="Subiendo...75%"
+            app:layout_constraintStart_toStartOf="@id/progressBar"
+            app:layout_constraintEnd_toEndOf="@id/progressBar"
+            app:layout_constraintTop_toBottomOf="@id/progressBar"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tiFullName"
@@ -29,7 +49,7 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ibProfile">
+            app:layout_constraintTop_toBottomOf="@id/tvProgress">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etFullName"
                 android:layout_width="match_parent"
@@ -37,23 +57,23 @@
                 android:inputType="textPersonName"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tiPhotoUrl"
-            android:layout_width="@dimen/profile_width_textfield"
-            android:layout_height="wrap_content"
-            android:hint="@string/hint_photo_url"
-            android:layout_marginTop="@dimen/common_padding_min"
-            app:endIconMode="clear_text"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tiFullName">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPhotoUrl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textUri"/>
-        </com.google.android.material.textfield.TextInputLayout>
+<!--        <com.google.android.material.textfield.TextInputLayout-->
+<!--            android:id="@+id/tiPhotoUrl"-->
+<!--            android:layout_width="@dimen/profile_width_textfield"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:hint="@string/hint_photo_url"-->
+<!--            android:layout_marginTop="@dimen/common_padding_min"-->
+<!--            app:endIconMode="clear_text"-->
+<!--            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintTop_toBottomOf="@id/tiFullName">-->
+<!--            <com.google.android.material.textfield.TextInputEditText-->
+<!--                android:id="@+id/etPhotoUrl"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:inputType="textUri"/>-->
+<!--        </com.google.android.material.textfield.TextInputLayout>-->
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnUpdate"
@@ -63,6 +83,6 @@
             android:layout_marginTop="@dimen/common_padding_default"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tiPhotoUrl"/>
+            app:layout_constraintTop_toBottomOf="@id/tiFullName"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
