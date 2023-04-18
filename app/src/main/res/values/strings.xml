@@ -21,7 +21,7 @@
     <string name="order_id">ID: %1$s</string>
     <string name="order_chat_help">¿Necesitas ayuda?</string>
     <string name="order_title">Historial de compras</string>
-    
+
     <string name="order_status_ordered">Pedido</string>
     <string name="order_status_preparing">Preparando</string>
     <string name="order_status_sent">Enviado</string>
@@ -48,4 +48,9 @@
     <string name="product_menu_profile">Editar Perfil</string>
     <string name="product_menu_sign_out">Cerrar Sesión</string>
     <string name="profile_title">Perfil de Usuario</string>
+    <string name="pref_fcm_title">Recibir Notificaciones</string>
+    <string name="pref_offers_key">pref_offers</string>
+    <string name="pref_offers_title">Ofertas y Promociones</string>
+    <string name="product_menu_settings">Configuración</string>
+    <string name="settings_topic_offers">topic_offers</string>
 </resources>

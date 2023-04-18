@@ -23,6 +23,7 @@ import com.example.nilo.detail.DetailFragment
 import com.example.nilo.entities.Product
 import com.example.nilo.order.OrderActivity
 import com.example.nilo.profile.ProfileFragment
+import com.example.nilo.settings.SettingsActivity
 import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
@@ -292,6 +293,10 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 
 
                 showButton(false)//oculto el boton de ver carrito
+            }
+
+            R.id.action_settings ->{
+                startActivity(Intent(this, SettingsActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)

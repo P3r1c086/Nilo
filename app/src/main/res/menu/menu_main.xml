@@ -10,6 +10,10 @@
         android:title="@string/product_menu_profile"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/action_settings"
+        android:title="@string/product_menu_settings"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_order_history"
         android:title=""
         android:icon="@drawable/ic_history"

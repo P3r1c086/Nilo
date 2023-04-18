@@ -10,4 +10,8 @@
         <item name="colorControlHighlight">@color/blue_grey_800_light</item>
         <item name="android:windowBackground">@color/white</item>
     </style>
+    
+    <style name="PreferencesTheme" parent="Theme.Nilo">
+        <item name="colorSecondary">@color/yellow_a700_dark</item>
+    </style>
 </resources>
