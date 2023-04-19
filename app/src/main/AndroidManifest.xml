@@ -26,6 +26,14 @@
             android:name=".order.OrderActivity"
             android:exported="false"
             android:label="@string/order_title">
+<!-- Con intent-filter la bandeja del sistema va a comenzar a verificar que actividades estan registradas
+con el nombre OPEN_ORDER puesto en el clik_action de la notificacion que viene del servidor. Sirve para
+poder indicar, desde el servidor , que la actividad que tiene que abrir al pulsar las notificaciones es
+la OrderActivity. El paramentro click_action de php solo sirve para activities-->
+            <intent-filter>
+                <action android:name="OPEN_ORDER"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -52,15 +60,15 @@
             </intent-filter>
         </service>
 
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_stat_name" />
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/yellow_a700" />
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="@string/notification_channel_id_default" />
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.messaging.default_notification_icon"-->
+<!--            android:resource="@drawable/ic_stat_name" />-->
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.messaging.default_notification_color"-->
+<!--            android:resource="@color/yellow_a700" />-->
+<!--        <meta-data-->
+<!--            android:name="com.google.firebase.messaging.default_notification_channel_id"-->
+<!--            android:value="@string/notification_channel_id_default" />-->
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_application_id" />

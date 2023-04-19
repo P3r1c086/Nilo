@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
@@ -12,8 +14,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.example.nilo.Constants
 import com.example.nilo.R
+import com.example.nilo.order.OrderActivity
 import com.example.nilo.product.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -29,6 +35,11 @@ class FCMService : FirebaseMessagingService(){
 
     //Un token es una clave unica con la cual se puede comunicar el servidor de Firebase, para que
     // de esta forma le haga llegar la notificacion
+    /**
+     * Se llama cuando se genera un nuevo token para el proyecto predeterminado de Firebase.
+     * Esto se invoca (automaticamente?) después de la instalación de la aplicación cuando se genera un token por primera
+     * vez, y nuevamente si el token cambia.
+     */
     override fun onNewToken(newToken: String) {
         super.onNewToken(newToken)
 
@@ -50,18 +61,50 @@ class FCMService : FirebaseMessagingService(){
         Log.i("new token", newToken)
     }
 
+    /**
+     * Se llama cuando se recibe un mensaje.
+     * Esto también se llama (automaticamente?) cuando se recibe un mensaje de notificación mientras la
+     * aplicación está en primer plano. Los parámetros de notificación se pueden recuperar con getNotification.
+     */
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        //verificar que la notificacion no sea null
+        //verificar que la notificacion no sea null. notification es getNotification
         remoteMessage.notification?.let {
-            sendNotification(it)
+            //antes de llamar al metodo sendNotification, vamos a extraer la imagen de la notificacion
+            // en un bitmap con la ayuda de Glide
+            //podemos cargar la url directamente aqui o desde el servidor
+            val imgUrl = it.imageUrl//"https://i.imgur.com/cfVGIA8.png"
+            //si la imagen que viene del servidor es igual a null, llamanos a sendNotification(), le
+            // pasamos la notificacion "it" y el bitmap no se lo pasamos porque ya tiene valor null
+            if (imgUrl == null){
+                sendNotification(it)
+            }else{//solo si imgUrl es distinto de null procedemos a cargar esa imagen
+                Glide.with(applicationContext)
+                    .asBitmap()
+                    .load(imgUrl)
+                    //en into() hacemos una implementacion de la interfaz
+                    .into(object : CustomTarget<Bitmap?>(){
+                        override fun onResourceReady(
+                            resource: Bitmap,
+                            transition: Transition<in Bitmap?>?
+                        ) {
+                            //resource es nuestro bitmap ya cargado
+                            sendNotification(it, resource)
+                        }
+
+                        override fun onLoadCleared(placeholder: Drawable?) {}//este metodo no lo vamos a necesitar
+                    })
+            }
         }
     }
 
-    private fun sendNotification(notification: RemoteMessage.Notification){
+    //Cuando estas en segundo plano o con la app sin iniciar se envia la notificacion con la configuracion
+    // del servidor (php), si estas dentro de la app se envia la notificacion con la configuracion de la app (kotlin)
+    private fun sendNotification(notification: RemoteMessage.Notification, bitmap: Bitmap? = null){
         //construir una notificacion
-        val intent = Intent(this, MainActivity::class.java)
+        //OrderActivity::class.java es la actividad que se va a mostrar al pulsar la notificacion
+        val intent = Intent(this, OrderActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent,
             PendingIntent.FLAG_ONE_SHOT)
@@ -76,6 +119,24 @@ class FCMService : FirebaseMessagingService(){
             .setSound(defaultSoundUri)
             .setColor(ContextCompat.getColor(this, R.color.yellow_a700))
             .setContentIntent(pendingIntent)
+            //hacemos que la notificacion sea expandible para que pueda verse un texto largo
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText(notification.body))
+
+        //verificamos si bitmap es diferente de null para que si no encuentra la imagen no quede un
+        // espacio en blanco en la notificacion
+        bitmap?.let {
+            notificationBuilder
+                //para poner la imagen en pequeño cuando la notificacion este contraida
+                .setLargeIcon(bitmap)
+                //para poner una imagen, en formato bitmap, en la notificacion
+                .setStyle(NotificationCompat.BigPictureStyle()
+                    .bigPicture(bitmap)
+                    //indicamos que cuando este la notificacion expandida ya no queremos ver el la imagen en pequeño
+                    .bigLargeIcon(null))
+        }
+
+
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -88,22 +149,4 @@ class FCMService : FirebaseMessagingService(){
 
         notificationManager.notify(0, notificationBuilder.build())
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
