@@ -69,6 +69,12 @@ class FCMService : FirebaseMessagingService(){
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
+        //en caso afirmativo significa que probiene de sendNotificationByTokens del php. En caso de
+        // que venga de sendNotificationByTopic, data estara vacio
+        if (remoteMessage.data.isNotEmpty()){
+            sendNotificationByData(remoteMessage.data)
+        }
+
         //verificar que la notificacion no sea null. notification es getNotification
         remoteMessage.notification?.let {
             //antes de llamar al metodo sendNotification, vamos a extraer la imagen de la notificacion
@@ -97,6 +103,61 @@ class FCMService : FirebaseMessagingService(){
                     })
             }
         }
+    }
+
+    //Cuando estas en segundo plano o con la app sin iniciar se envia la notificacion con la configuracion
+    // del servidor (php), si estas dentro de la app se envia la notificacion con la configuracion de la app (kotlin)
+    private fun sendNotificationByData(data: Map<String, String>){
+        //construir una notificacion
+        //OrderActivity::class.java es la actividad que se va a mostrar al pulsar la notificacion
+        val intent = Intent(this, OrderActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent,
+            PendingIntent.FLAG_ONE_SHOT)
+
+        val channelId = getString(R.string.notification_channel_id_default)
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_stat_name)
+            //title y body son la keys pasadas en el map
+            .setContentTitle(data.get("title"))
+            .setContentText(data.get("body"))
+            .setAutoCancel(true)
+            .setSound(defaultSoundUri)
+            .setColor(ContextCompat.getColor(this, R.color.yellow_a700))
+            .setContentIntent(pendingIntent)
+            //hacemos que la notificacion sea expandible para que pueda verse un texto largo
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText(data.get("body")))
+
+        val trackIntent = Intent(this, OrderActivity::class.java).apply {
+            //estos tres argumentos son requeridos en el metodo getOrder() de TrackFragment, es decir,
+            // son requeridos por el fragment que deseamos que abra el boton de la notificacion. Ese
+            // fragmento es lanzado desde el metodo checkIntent() de OrderActivity
+            val actionIntent = data.get(Constants.ACTION_INTENT)?.toInt()
+            val orderId = data.get(Constants.PROP_ID)
+            val status = data.get(Constants.PROP_STATUS)?.toInt()
+            putExtra(Constants.ACTION_INTENT, actionIntent) // 1 = track
+            putExtra(Constants.PROP_ID, orderId)//id del pedido
+            putExtra(Constants.PROP_STATUS, status)
+        }
+        val trackPendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt(),
+            trackIntent, 0)
+        //construimos la accion para colocarle un boton a la notificacion
+        val action = NotificationCompat.Action.Builder(R.drawable.ic_local_shipping, "Rastrear ahora",
+        trackPendingIntent).build()
+        notificationBuilder.addAction(action)
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val channel = NotificationChannel(channelId,
+                getString(R.string.notification_channel_name_default),
+                NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        notificationManager.notify(0, notificationBuilder.build())
     }
 
     //Cuando estas en segundo plano o con la app sin iniciar se envia la notificacion con la configuracion

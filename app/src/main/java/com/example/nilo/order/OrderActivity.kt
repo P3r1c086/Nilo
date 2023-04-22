@@ -1,5 +1,6 @@
 package com.example.nilo.order
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
@@ -28,6 +29,29 @@ class OrderActivity : AppCompatActivity(), OnOrderListener, OrderAux{
 
         setupRecyclerView()
         setupFirestore()
+        
+        checkIntent(intent)
+    }
+
+    private fun checkIntent(intent: Intent?) {
+        intent?.let {
+            //creamos una nueva orden a la cual solo le vamos a especificar el id y el status
+            //como el id podria ser null lo extraemos en una variable para ponerle un Elvis.
+            // Y con el status lo mismo, ponemos 0 por default
+            val actionIntent = it.getIntExtra(Constants.ACTION_INTENT, 0)
+            if (actionIntent == 1) {
+                val id = intent.getStringExtra(Constants.PROP_ID) ?: ""
+                val status = intent.getIntExtra(Constants.PROP_STATUS, 0)
+                orderSelected = Order(id = id, status = status)
+                //lanzar el fragmento
+                val fragment = TrackFragment()
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.containerMain, fragment)
+                    .addToBackStack(null)
+                    .commit()
+            }
+        }
     }
 
     private fun setupRecyclerView() {
@@ -107,7 +131,6 @@ class OrderActivity : AppCompatActivity(), OnOrderListener, OrderAux{
             .add(R.id.containerMain, fragment)
             .addToBackStack(null)
             .commit()
-
     }
 
     override fun onStarChat(order: Order) {
