@@ -175,15 +175,15 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
         //le indicamos que solicite (fetch) y active (activate) los cambios despues de la respuesta
         // del servidor
         remoteConfig.fetchAndActivate()
-            .addOnSuccessListener {
-                //este mensaje es unicamente con fines de desarrollo, una vez en produccion no
-                // tendriamos que mostrar este mensaje cada vez que se consulten los datos de forma
-                // exitosa o no
-                Snackbar.make(binding.root, "Datos locales/remotos", Snackbar.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener {
-                Snackbar.make(binding.root, "Datos locales", Snackbar.LENGTH_SHORT).show()
-            }
+//            .addOnSuccessListener {
+//                //este mensaje es unicamente con fines de desarrollo, una vez en produccion no
+//                // tendriamos que mostrar este mensaje cada vez que se consulten los datos de forma
+//                // exitosa o no
+//                Snackbar.make(binding.root, "Datos locales/remotos", Snackbar.LENGTH_SHORT).show()
+//            }
+//            .addOnFailureListener {
+//                Snackbar.make(binding.root, "Datos locales", Snackbar.LENGTH_SHORT).show()
+//            }
             .addOnCompleteListener {
                 if (it.isSuccessful){
                     //comenzamos a extraer los valores independientemente de si son remotos o locales
