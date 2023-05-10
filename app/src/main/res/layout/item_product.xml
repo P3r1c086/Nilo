@@ -37,6 +37,8 @@
             android:id="@+id/tvName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:lines="1"
+            android:ellipsize="end"
             tools:text="Nombre del producto"
             android:layout_marginStart="10dp"
             android:textColor="@color/colorOnPrimary"

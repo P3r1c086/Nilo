@@ -8,10 +8,12 @@ import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.example.nilo.Constants
 import com.example.nilo.R
 import com.example.nilo.databinding.FragmentDetailBinding
 import com.example.nilo.entities.Product
 import com.example.nilo.product.MainAux
+import com.google.firebase.storage.FirebaseStorage
 
 /**
  * Proyect: Nilo
@@ -27,11 +29,7 @@ class DetailFragment : Fragment() {
     //esta variable se encargara del producto seleccionado proveniente de la activity
     private var product: Product? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentDetailBinding.inflate(inflater, container, false)
         binding?.let {
             return  it.root
@@ -49,19 +47,33 @@ class DetailFragment : Fragment() {
     private fun getProduct() {
         product = (activity as? MainAux)?.getProductSelected()
         product?.let { product ->
-            binding?.let {
-                it.tvName.text = product.name
-                it.tvDescription.text = product.description
-                it.tvQuantity.text = getString(R.string.detail_quantity, product.quantity)
+            binding?.let { binding ->
+                binding.tvName.text = product.name
+                binding.tvDescription.text = product.description
+                binding.tvQuantity.text = getString(R.string.detail_quantity, product.quantity)
                 setNewQuantity(product)
 
-                Glide.with(this)
-                    .load(product.imgUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(R.drawable.ic_access_time)
-                    .error(R.drawable.ic_broken_image)
-                    .centerCrop()
-                    .into(it.imgProduct)
+//                Glide.with(this)
+//                    .load(product.imgUrl)
+//                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+//                    .placeholder(R.drawable.ic_access_time)
+//                    .error(R.drawable.ic_broken_image)
+//                    .centerCrop()
+//                    .into(it.imgProduct)
+                //al tratarse de un fragmento el contexto podria ser null
+                context?.let { context ->  
+                    val productRef = FirebaseStorage.getInstance().reference
+                        .child(product.sellerId)//necesitamos el id del vendedor
+                        .child(Constants.PATH_PRODUCT_IMAGES)
+                        .child(product.id!!)
+                    //el metodo listAll()necesita que la "rules_version" del storage sea = 2
+                    productRef.listAll().addOnSuccessListener { imgList ->
+                        val detailAdapter = DetailAdapter(imgList.items, context)
+                        binding.vpProduct.apply {
+                            adapter = detailAdapter
+                        }
+                    }
+                }
             }
         }
     }
