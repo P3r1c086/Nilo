@@ -28,6 +28,7 @@ import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.ktx.logEvent
@@ -39,6 +40,8 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
@@ -127,6 +130,8 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        configToolbar()
+        configRemoteConfig()
         configAuth()
         configRecyclerView()
         configButtons()
@@ -142,6 +147,55 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
 //                Log.i("get token", task.exception.toString())
 //            }
 //        }
+    }
+
+    private fun configToolbar() {
+
+    }
+
+    /**
+     * Metodo para configurar el metodo desarrollador. Por default remoteConfig va a actualizar
+     * los cambios cada 12 horas.
+     */
+    private fun configRemoteConfig() {
+        val remoteConfig = Firebase.remoteConfig
+
+        //para no tener que esperar las 12 horas
+        val configSettings = remoteConfigSettings {
+//            minimumFetchIntervalInSeconds = 3600 // 3600 = 1s*60s*60m = 1hora
+            minimumFetchIntervalInSeconds = 5
+        }
+        //lo asignamos a la configuracion de nuestra instancia
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        //le agregamos valores por default
+        remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
+        //le indicamos que solicite (fetch) y active (activate) los cambios despues de la respuesta
+        // del servidor
+        remoteConfig.fetchAndActivate()
+            .addOnSuccessListener {
+                //este mensaje es unicamente con fines de desarrollo, una vez en produccion no
+                // tendriamos que mostrar este mensaje cada vez que se consulten los datos de forma
+                // exitosa o no
+                Snackbar.make(binding.root, "Datos locales/remotos", Snackbar.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Snackbar.make(binding.root, "Datos locales", Snackbar.LENGTH_SHORT).show()
+            }
+            .addOnCompleteListener {
+                if (it.isSuccessful){
+                    //comenzamos a extraer los valores independientemente de si son remotos o locales
+                    val isPromoDay = remoteConfig.getBoolean("isPromoDay")
+                    val promCounter = remoteConfig.getLong("promCounter")
+                    val percentaje = remoteConfig.getDouble("percentaje")
+                    val photoUrl = remoteConfig.getString("photoUrl")
+                    val message = remoteConfig.getString("message")
+
+                    if (isPromoDay){
+                        Snackbar.make(binding.root, "Hay promoción", Snackbar.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
     }
 
     private fun configAuth(){
