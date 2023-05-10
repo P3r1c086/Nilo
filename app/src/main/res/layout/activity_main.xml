@@ -1,84 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/containerMain"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_blue_800_dark"
     tools:context=".product.MainActivity">
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/tvTotal"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/product_preview_cart_height"
-        android:text="@string/product_empty_cart"
-        android:textColor="@color/colorOnPrimary"
-        android:textAppearance="?attr/textAppearanceHeadline6"
-        android:gravity="center_vertical"
-        android:layout_marginStart="@dimen/common_padding_default"
-        android:layout_marginEnd="@dimen/common_padding_min"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnViewCart"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnViewCart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/product_view_cart"
-        android:layout_marginEnd="@dimen/common_padding_default"
-        android:layout_marginStart="@dimen/common_padding_min"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/tvTotal"
-        app:layout_constraintTop_toTopOf="@id/tvTotal"/>
-    <View
-        android:id="@+id/separator"
+    
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/yellow_a700"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/nsvProducts"/>
-
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/nsvProducts"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        tools:visibility="visible"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/tvTotal">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
+        android:layout_height="wrap_content"
+        android:theme="@style/Theme.Nilo.AppBarOverlay">
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:listitem="@layout/item_product"/>
-    </androidx.core.widget.NestedScrollView>
+            android:layout_height="wrap_content"
+            app:popupTheme="@style/Theme.Nilo.PopupOverlay"/>
+    </com.google.android.material.appbar.AppBarLayout>
+    
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/containerMain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/light_blue_800_dark"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <LinearLayout
-        android:id="@+id/llProgress"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:visibility="visible"
-        android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" >
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvTotal"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/product_preview_cart_height"
+            android:text="@string/product_empty_cart"
+            android:textColor="@color/colorOnPrimary"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:gravity="center_vertical"
+            android:layout_marginStart="@dimen/common_padding_default"
+            android:layout_marginEnd="@dimen/common_padding_min"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnViewCart"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-        <TextView
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewCart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/product_msg_loading"/>
+            android:text="@string/product_view_cart"
+            android:layout_marginEnd="@dimen/common_padding_default"
+            android:layout_marginStart="@dimen/common_padding_min"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvTotal"
+            app:layout_constraintTop_toTopOf="@id/tvTotal"/>
+        <View
+            android:id="@+id/separator"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/yellow_a700"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/nsvProducts"/>
 
-    </LinearLayout>
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nsvProducts"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tvTotal">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/item_product"/>
+        </androidx.core.widget.NestedScrollView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:id="@+id/llProgress"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:visibility="visible"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" >
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/product_msg_loading"/>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

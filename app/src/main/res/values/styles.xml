@@ -14,4 +14,12 @@
     <style name="PreferencesTheme" parent="Theme.Nilo">
         <item name="colorSecondary">@color/yellow_a700_dark</item>
     </style>
+    
+    <style name="Theme.Nilo.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Nilo.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <style name="Theme.Nilo.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
 </resources>

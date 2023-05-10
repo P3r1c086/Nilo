@@ -23,11 +23,14 @@ import com.example.nilo.detail.DetailFragment
 import com.example.nilo.entities.Product
 import com.example.nilo.order.OrderActivity
 import com.example.nilo.profile.ProfileFragment
+import com.example.nilo.promo.PromoFragment
 import com.example.nilo.settings.SettingsActivity
 import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.ErrorCodes
 import com.firebase.ui.auth.IdpResponse
+import com.google.android.material.badge.BadgeDrawable
+import com.google.android.material.badge.BadgeUtils
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
@@ -150,7 +153,7 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
     }
 
     private fun configToolbar() {
-
+        setSupportActionBar(binding.toolbar)
     }
 
     /**
@@ -191,7 +194,13 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
                     val message = remoteConfig.getString("message")
 
                     if (isPromoDay){
-                        Snackbar.make(binding.root, "Hay promoción", Snackbar.LENGTH_SHORT).show()
+//                        Snackbar.make(binding.root, "Hay promoción", Snackbar.LENGTH_SHORT).show()
+                        //construimos un objeto de tipo badge
+                        val badge =  BadgeDrawable.create(this)
+                        //lo asignamos a un elemento grafico
+                        BadgeUtils.attachBadgeDrawable(badge, binding.toolbar, R.id.action_promo)
+                        //mostramos en el badge el numero de promociones
+                        badge.number = promCounter.toInt()
                     }
                 }
             }
@@ -345,12 +354,21 @@ class MainActivity : AppCompatActivity(), OnProductListener, MainAux {
                     .addToBackStack(null)
                     .commit()//aplicar los cambios con commit
 
-
                 showButton(false)//oculto el boton de ver carrito
             }
 
             R.id.action_settings ->{
                 startActivity(Intent(this, SettingsActivity::class.java))
+            }
+            R.id.action_promo ->{
+                val fragment = PromoFragment()
+                supportFragmentManager
+                    .beginTransaction()
+                    .add(R.id.containerMain, fragment)
+                    .addToBackStack(null)
+                    .commit()//aplicar los cambios con commit
+
+                showButton(false)//oculto el boton de ver carrito
             }
         }
         return super.onOptionsItemSelected(item)

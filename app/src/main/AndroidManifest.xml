@@ -40,6 +40,7 @@ la OrderActivity. El paramentro click_action de php solo sirve para activities--
         </activity>
         <activity
             android:name=".product.MainActivity"
+            android:theme="@style/Theme.Nilo.NoActionBar"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
